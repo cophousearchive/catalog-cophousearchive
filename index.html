@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cophouse Archive — Rental Catalog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root{--bg:#0a0a0a;--bg-card:#141414;--bg-elevated:#1a1a1a;--text-primary:#f0f0f0;--text-secondary:#8a8a8a;--text-muted:#555;--accent:#0395FF;--accent-dim:rgba(3,149,255,.12);--border:#222;--border-hover:#3a3a3a;--green:#2ecc71;--orange:#f39c12;--red:#e74c3c;--radius:12px;--radius-sm:8px}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Instrument Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text-primary);line-height:1.5;-webkit-font-smoothing:antialiased}
+        .header{padding:48px 0 40px;text-align:center;border-bottom:1px solid var(--border);position:relative}
+        .header::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 50% 0%,rgba(3,149,255,.05) 0%,transparent 70%);pointer-events:none}
+        .header-inner{max-width:1440px;margin:0 auto;padding:0 24px;position:relative}
+        .brand-name{font-size:2rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase}
+        .brand-tagline{font-family:'Playfair Display',serif;font-style:italic;font-size:1rem;color:var(--accent);letter-spacing:.05em}
+        .catalog-badge{display:inline-block;margin-top:18px;padding:6px 20px;border:1px solid var(--border);border-radius:100px;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-secondary)}
+        .header-links{margin-top:14px}
+        .tc-link{font-size:.68rem;color:var(--text-muted);text-decoration:none;letter-spacing:.08em;border-bottom:1px solid transparent;transition:color .2s}
+        .tc-link:hover{color:var(--text-secondary);border-bottom-color:var(--text-secondary)}
+        .tc-section{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.2,0,0,1);border-bottom:1px solid transparent}
+        .tc-section.open{max-height:800px;border-bottom-color:var(--border)}
+        .tc-inner{max-width:800px;margin:0 auto;padding:0 24px}
+        .tc-header{display:flex;justify-content:space-between;align-items:center;padding:24px 0 16px}
+        .tc-title{font-size:.85rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-secondary)}
+        .tc-close{width:28px;height:28px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-secondary);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+        .tc-close:hover{background:var(--border);color:var(--text-primary)}
+        .tc-body{padding-bottom:28px;font-size:.78rem;color:var(--text-secondary);line-height:1.7;max-height:400px;overflow-y:auto}
+        .tc-body h3{font-size:.82rem;font-weight:600;color:var(--text-primary);margin:20px 0 8px}
+        .tc-body h3:first-child{margin-top:0}
+        .tc-body p{margin-bottom:10px}
+        .tc-body ul{margin:0 0 10px 18px}
+        .tc-body li{margin-bottom:6px}
+        .tc-notice{background:var(--accent-dim);border:1px solid rgba(3,149,255,.2);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:20px;font-size:.78rem;line-height:1.6;color:var(--text-primary)}
+        .tc-notice strong{color:var(--accent)}
+        .filters-bar{position:sticky;top:0;z-index:50;background:rgba(10,10,10,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:16px 24px}
+        .filters-inner{max-width:1440px;margin:0 auto;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+        .search-input{padding:8px 16px;border:1px solid var(--border);border-radius:100px;background:var(--bg-elevated);color:var(--text-primary);font-family:'Instrument Sans',sans-serif;font-size:.78rem;width:240px;outline:none;transition:border-color .25s}
+        .search-input::placeholder{color:var(--text-muted)}
+        .search-input:focus{border-color:var(--accent)}
+        .filter-select{padding:7px 14px;border:1px solid var(--border);border-radius:100px;background:var(--bg-elevated);color:var(--text-secondary);font-family:'Instrument Sans',sans-serif;font-size:.72rem;cursor:pointer;outline:none;letter-spacing:.04em;transition:all .2s;-webkit-appearance:none}
+        .filter-select:hover{border-color:var(--border-hover)}
+        .filter-select:focus{border-color:var(--accent);color:var(--accent)}
+        .gender-btn{padding:7px 16px;border:1px solid var(--border);border-radius:100px;background:transparent;color:var(--text-secondary);font-family:'Instrument Sans',sans-serif;font-size:.72rem;cursor:pointer;letter-spacing:.08em;text-transform:uppercase;transition:all .2s}
+        .gender-btn:hover{border-color:var(--border-hover);color:var(--text-primary)}
+        .gender-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+        .filter-count{margin-left:auto;font-size:.72rem;color:var(--text-muted)}
+        .clear-btn{padding:7px 14px;border:1px solid var(--border);border-radius:100px;background:transparent;color:var(--text-muted);font-family:'Instrument Sans',sans-serif;font-size:.68rem;cursor:pointer;transition:all .2s}
+        .clear-btn:hover{border-color:var(--red);color:var(--red)}
+        .grid{max-width:1440px;margin:0 auto;padding:28px 24px 120px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+        .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:all .3s cubic-bezier(.2,0,0,1);cursor:pointer;position:relative;opacity:0;animation:fadeUp .4s ease forwards}
+        .card:hover{border-color:var(--border-hover);transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,.3)}
+        .card.unavailable{opacity:.55}.card.unavailable:hover{transform:none;box-shadow:none}
+        .card.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        .card-select{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.5);border:2px solid rgba(255,255,255,.3);z-index:5;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;backdrop-filter:blur(8px)}
+        .card-select:hover{border-color:var(--accent);background:rgba(0,0,0,.7)}
+        .card-select.checked{background:var(--accent);border-color:var(--accent)}
+        .card-select.checked::after{content:'✓';color:#fff;font-size:14px;font-weight:700}
+        .unavailable-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:3;border-radius:var(--radius)}
+        .unavailable-text{font-size:.72rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--orange);margin-bottom:4px}
+        .unavailable-date{font-size:.68rem;color:var(--text-secondary)}
+        .card-images{position:relative;aspect-ratio:3/4;background:#0e0e0e;overflow:hidden}
+        .card-images img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;padding:12px;opacity:0;transition:opacity .35s ease}
+        .card-images img.active{opacity:1}
+        .carousel-dots{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:2}
+        .carousel-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .25s}
+        .carousel-dot.active{background:var(--accent);width:16px;border-radius:3px}
+        .swipe-zone{position:absolute;top:0;bottom:0;width:50%;z-index:1}
+        .swipe-zone.left{left:0}.swipe-zone.right{right:0}
+        .condition-tag{position:absolute;top:10px;left:10px;padding:3px 10px;border-radius:100px;font-size:.6rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;z-index:2}
+        .condition-excellent{background:rgba(46,204,113,.15);color:var(--green)}
+        .condition-new{background:rgba(240,240,240,.15);color:var(--text-primary)}
+        .condition-used{background:rgba(243,156,18,.15);color:var(--orange)}
+        .condition-worn{background:rgba(231,76,60,.15);color:var(--red)}
+        .card-body{padding:16px}
+        .card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px}
+        .card-brand{font-size:.65rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+        .card-cat{font-size:.6rem;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase}
+        .card-name{font-size:.95rem;font-weight:600;line-height:1.25;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .card-meta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+        .meta-chip{font-size:.66rem;color:var(--text-secondary)}
+        .meta-chip span{color:var(--text-primary);font-weight:500}
+        .card-divider{height:1px;background:var(--border);margin-bottom:12px}
+        .pricing-row{display:flex;justify-content:space-between;align-items:flex-end}
+        .price-buy{font-size:1.3rem;font-weight:700;letter-spacing:-.02em}
+        .price-buy .cur{font-size:.75rem;font-weight:500;color:var(--text-secondary)}
+        .price-label-small{font-size:.55rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em}
+        .rental-mini{text-align:right}
+        .rental-mini-label{font-size:.55rem;color:var(--text-muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px}
+        .rental-pills{display:flex;gap:5px}
+        .rental-pill{padding:3px 8px;border-radius:5px;background:var(--bg-elevated);border:1px solid var(--border);font-size:.62rem;color:var(--text-secondary);white-space:nowrap}
+        .rental-pill strong{color:var(--text-primary);font-weight:600}
+        .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.88);backdrop-filter:blur(20px);z-index:200;justify-content:center;align-items:center;padding:24px}
+        .modal-overlay.open{display:flex}
+        .modal{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);max-width:920px;width:100%;max-height:90vh;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;position:relative;animation:modalIn .25s ease}
+        @keyframes modalIn{from{opacity:0;transform:scale(.96)}}
+        .modal-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-secondary);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:all .2s}
+        .modal-close:hover{background:var(--border);color:var(--text-primary)}
+        .modal-gallery{aspect-ratio:3/4;position:relative;background:#0e0e0e;border-radius:var(--radius) 0 0 var(--radius);overflow:hidden}
+        .modal-gallery img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;padding:20px;opacity:0;transition:opacity .35s}
+        .modal-gallery img.active{opacity:1}
+        .modal-thumbs{position:absolute;bottom:14px;left:14px;right:14px;display:flex;gap:6px;justify-content:center}
+        .modal-thumb{width:48px;height:48px;border-radius:6px;overflow:hidden;cursor:pointer;border:2px solid transparent;opacity:.45;transition:all .2s}
+        .modal-thumb.active{border-color:var(--accent);opacity:1}
+        .modal-thumb img{width:100%;height:100%;object-fit:cover;position:static;opacity:1;padding:0}
+        .modal-details{padding:32px;display:flex;flex-direction:column;overflow-y:auto}
+        .modal-brand{font-size:.7rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+        .modal-name{font-size:1.5rem;font-weight:700;line-height:1.2;margin-bottom:6px}
+        .modal-cat{font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:24px}
+        .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+        .detail-item{padding:10px;background:var(--bg-elevated);border-radius:var(--radius-sm);border:1px solid var(--border)}
+        .detail-label{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px}
+        .detail-value{font-size:.85rem;font-weight:600}
+        .meas-section{margin-bottom:20px}
+        .meas-title{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px}
+        .meas-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:.8rem}
+        .meas-row:last-child{border:none}
+        .meas-key{color:var(--text-secondary)}
+        .meas-val{font-weight:600}
+        .modal-pricing{margin-top:auto;padding-top:20px;border-top:1px solid var(--border)}
+        .modal-price-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px}
+        .modal-buy-price{font-size:2rem;font-weight:700}
+        .modal-buy-price .cur{font-size:.9rem;font-weight:500;color:var(--text-secondary)}
+        .modal-buy-label{font-size:.6rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em}
+        .modal-rental-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+        .modal-rental-item{text-align:center;padding:10px 6px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-sm)}
+        .modal-rental-days{font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:3px}
+        .modal-rental-price{font-size:1.05rem;font-weight:700;color:var(--accent)}
+        .inquiry-btn{display:block;width:100%;padding:13px;background:#25D366;color:#fff;border:none;border-radius:var(--radius-sm);font-family:'Instrument Sans',sans-serif;font-size:.8rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+        .inquiry-btn:hover{background:#1fba59;transform:translateY(-1px)}
+        .selection-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(20,20,20,.95);backdrop-filter:blur(16px);border-top:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:center;gap:16px;z-index:100;transform:translateY(100%);transition:transform .3s cubic-bezier(.2,0,0,1)}
+        .selection-bar.visible{transform:translateY(0)}
+        .sel-count{font-size:.78rem;font-weight:600;color:var(--accent)}
+        .sel-share-btn{padding:10px 24px;background:#25D366;color:#fff;border:none;border-radius:100px;font-family:'Instrument Sans',sans-serif;font-size:.78rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+        .sel-share-btn:hover{background:#1fba59}
+        .sel-clear-btn{padding:10px 16px;background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:100px;font-family:'Instrument Sans',sans-serif;font-size:.72rem;cursor:pointer;transition:all .2s}
+        .sel-clear-btn:hover{border-color:var(--red);color:var(--red)}
+        .tutorial-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);z-index:300;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;animation:tutIn .4s ease forwards}
+        @keyframes tutIn{to{opacity:1}}
+        .tutorial-overlay.hiding{animation:tutOut .3s ease forwards}
+        @keyframes tutOut{to{opacity:0}}
+        .tutorial-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;max-width:420px;width:100%;padding:36px 32px 28px;text-align:center;animation:tutUp .4s cubic-bezier(.2,0,0,1) .1s both}
+        @keyframes tutUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+        .tut-icon{width:56px;height:56px;border-radius:50%;background:var(--accent-dim);margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+        .tut-title{font-size:1.15rem;font-weight:700;margin-bottom:8px}
+        .tut-subtitle{font-size:.78rem;color:var(--text-secondary);margin-bottom:28px;line-height:1.6}
+        .tut-steps{text-align:left;margin-bottom:28px}
+        .tut-step{display:flex;gap:14px;align-items:flex-start;padding:12px 0}
+        .tut-step+.tut-step{border-top:1px solid var(--border)}
+        .tut-step-num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .tut-step-text{font-size:.82rem;color:var(--text-secondary);line-height:1.5;padding-top:3px}
+        .tut-step-text strong{color:var(--text-primary);font-weight:600}
+        .tut-got-it{padding:12px 32px;background:var(--accent);color:#fff;border:none;border-radius:100px;font-family:'Instrument Sans',sans-serif;font-size:.82rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+        .tut-got-it:hover{background:#0280dd}
+        .tut-dismiss{display:block;margin-top:12px;font-size:.68rem;color:var(--text-muted);background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif}
+        .tut-dismiss:hover{color:var(--text-secondary)}
+        .help-fab{position:fixed;bottom:24px;right:24px;width:44px;height:44px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border);color:var(--accent);font-size:1.1rem;font-weight:700;cursor:pointer;z-index:90;display:flex;align-items:center;justify-content:center;transition:all .25s;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+        .help-fab:hover{background:var(--accent-dim);border-color:var(--accent);transform:scale(1.08)}
+        .no-results{grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--text-muted)}
+        .no-results-icon{font-size:2.5rem;margin-bottom:12px;opacity:.4}
+        @media(max-width:768px){
+            .brand-name{font-size:1.4rem}.grid{grid-template-columns:1fr 1fr;gap:10px;padding:16px 12px 120px}.card-body{padding:12px}.card-name{font-size:.82rem}.pricing-row{flex-direction:column;gap:8px;align-items:flex-start}.rental-pill{font-size:.58rem;padding:2px 6px}.filters-bar{padding:12px}.search-input{width:100%;order:-1}.filter-select,.gender-btn{font-size:.66rem;padding:6px 10px}.modal{grid-template-columns:1fr}.modal-gallery{aspect-ratio:1/1;border-radius:var(--radius) var(--radius) 0 0}.modal-details{padding:20px}.modal-name{font-size:1.2rem}.tutorial-card{padding:28px 20px 24px}.help-fab{width:40px;height:40px;bottom:20px;right:16px}
+        }
+        @media(max-width:380px){.grid{grid-template-columns:1fr}}
+        ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+    </style>
+</head>
+<body>
+<div class="header"><div class="header-inner">
+    <div class="brand-name">Cophouse Archive</div>
+    <div class="brand-tagline">Live your nostalgia</div>
+    <div class="catalog-badge">Rental Catalog &bull; 2026</div>
+    <div class="header-links"><a href="#" class="tc-link" onclick="event.preventDefault();document.getElementById('tcSection').classList.toggle('open')">Terms &amp; Conditions</a></div>
+</div></div>
+
+<div class="tc-section" id="tcSection"><div class="tc-inner">
+    <div class="tc-header"><h2 class="tc-title">Terms &amp; Conditions</h2><button class="tc-close" onclick="document.getElementById('tcSection').classList.remove('open')">&times;</button></div>
+    <div class="tc-body">
+        <div class="tc-notice"><strong>Please note:</strong> To finalize any rental, a formal Rental Agreement must be signed between the client and Cophouse S.R.L. before the items are dispatched. By browsing and requesting pieces through this catalog, you acknowledge and accept the following terms.</div>
+        <h3>1. Rental Purpose</h3><p>All garments available through this catalog are rented exclusively for editorial, photographic, or personal styling purposes as agreed upon at the time of booking. Any use beyond the agreed scope requires prior written authorization from Cophouse S.R.L.</p>
+        <h3>2. Rental Duration &amp; Fees</h3><p>The rental period and corresponding fee are established at the time of booking. Three standard durations are offered (3, 7, and 15 days). The rental period begins on the date of dispatch and ends on the agreed return date. Extensions must be requested in advance and are subject to availability and additional charges.</p>
+        <h3>3. Care &amp; Responsibility</h3><ul><li>The renter must handle all garments with the utmost care, avoiding stains, tears, burns, or any other form of damage.</li><li>No alterations, cutting, dyeing, or modifications of any kind are permitted without prior written consent from Cophouse S.R.L.</li><li>Items must be returned in the same condition as received, accounting only for normal wear consistent with the agreed use.</li></ul>
+        <h3>4. Liability for Damage or Loss</h3><ul><li>The renter is fully responsible for any damage, deterioration, or loss of the rented items, regardless of the cause.</li><li>In the event of irreparable damage or loss, the renter agrees to pay the full commercial value of the item as listed in the catalog.</li><li>If damage is repairable, the renter is responsible for the full cost of restoration, as assessed by Cophouse S.R.L.</li></ul>
+        <h3>5. Returns</h3><p>All items must be returned by the date specified in the rental agreement, clean and in perfect condition. Late returns are subject to a penalty of &euro;30.00 per day of delay, unless otherwise agreed in writing.</p>
+        <h3>6. Unauthorized Use</h3><p>The renter may not sublease, lend, or transfer the rented items to third parties without prior written authorization. Any unauthorized use will result in immediate termination of the rental agreement and the renter will be liable for any damages incurred by Cophouse S.R.L.</p>
+        <h3>7. Governing Law</h3><p>All rentals are governed by Italian law. For any dispute arising from the rental agreement, the exclusive jurisdiction is the Court of Milan.</p>
+        <h3>8. General Provisions</h3><p>The rental agreement is personal and non-transferable. Any amendments must be made in writing and signed by both parties. A signed copy of the formal Rental Agreement will be provided to each party before dispatch.</p>
+        <p style="margin-top:20px;color:var(--text-muted);font-size:.7rem">Cophouse S.R.L. &mdash; Via Alessandro de Franciscis 51, Caserta 81100 (CE), Italy &mdash; P.IVA 04745500613</p>
+    </div>
+</div></div>
+
+<div class="filters-bar"><div class="filters-inner">
+    <input type="text" class="search-input" placeholder="Search brand, name, category..." id="searchInput">
+    <div id="genderBtns" style="display:flex;gap:6px"><button class="gender-btn active" data-g="all">All</button><button class="gender-btn" data-g="Woman">Woman</button><button class="gender-btn" data-g="Man">Man</button><button class="gender-btn" data-g="Unisex">Unisex</button></div>
+    <select class="filter-select" id="catFilter"><option value="">All Categories</option></select>
+    <select class="filter-select" id="brandFilter"><option value="">All Brands</option></select>
+    <select class="filter-select" id="condFilter"><option value="">All Conditions</option></select>
+    <button class="clear-btn" id="clearBtn">Clear</button>
+    <span class="filter-count" id="countLabel"></span>
+</div></div>
+
+<div class="grid" id="grid"></div>
+
+<div class="modal-overlay" id="overlay"><div class="modal" id="modal">
+    <button class="modal-close" id="modalClose">&times;</button>
+    <div class="modal-gallery" id="mGallery"></div>
+    <div class="modal-details" id="mDetails"></div>
+</div></div>
+
+<div class="selection-bar" id="selBar">
+    <span class="sel-count" id="selCount">0 selected</span>
+    <button class="sel-share-btn" id="selShare">Share on WhatsApp</button>
+    <button class="sel-clear-btn" id="selClear">Clear</button>
+</div>
+
+<div class="tutorial-overlay" id="tutOverlay"><div class="tutorial-card">
+    <div class="tut-icon">&#128075;</div>
+    <div class="tut-title">Welcome to the Catalog</div>
+    <div class="tut-subtitle">Here's how to browse and request your rental pieces in a few taps.</div>
+    <div class="tut-steps">
+        <div class="tut-step"><div class="tut-step-num">1</div><div class="tut-step-text"><strong>Browse &amp; filter</strong> — use the search bar and filters to find pieces by brand, category, size or gender.</div></div>
+        <div class="tut-step"><div class="tut-step-num">2</div><div class="tut-step-text"><strong>Select your pieces</strong> — tap the circle in the top-right corner of each item you're interested in.</div></div>
+        <div class="tut-step"><div class="tut-step-num">3</div><div class="tut-step-text"><strong>Share on WhatsApp</strong> — once you've selected your pieces, tap the green button at the bottom to send us your list directly.</div></div>
+    </div>
+    <button class="tut-got-it" onclick="closeTutorial()">Got it</button>
+    <button class="tut-dismiss" onclick="closeTutorial(true)">Don't show again</button>
+</div></div>
+
+<button class="help-fab" id="helpFab" onclick="showTutorial()" title="How to use">?</button>
+
+<script src="data.js"></script>
+<script>
+const WA_NUMBER='';
+let selected=new Set(),currentGender='all',currentCat='',currentBrand='',currentCond='',searchQuery='';
+
+function showTutorial(){const o=document.getElementById('tutOverlay');o.classList.remove('hiding');o.style.display='flex';}
+function closeTutorial(no){const o=document.getElementById('tutOverlay');o.classList.add('hiding');setTimeout(()=>{o.style.display='none'},300);if(no)try{localStorage.setItem('cophouse_tut_dismissed','1')}catch(e){}}
+function checkTutorial(){try{if(localStorage.getItem('cophouse_tut_dismissed')){document.getElementById('tutOverlay').style.display='none';return}}catch(e){}showTutorial();}
+
+function init(){
+    FILTERS.categories.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;document.getElementById('catFilter').appendChild(o)});
+    FILTERS.brands.forEach(b=>{const o=document.createElement('option');o.value=b;o.textContent=b;document.getElementById('brandFilter').appendChild(o)});
+    FILTERS.conditions.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;document.getElementById('condFilter').appendChild(o)});
+    document.querySelectorAll('.gender-btn').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.gender-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');currentGender=btn.dataset.g;renderGrid()}));
+    document.getElementById('catFilter').addEventListener('change',e=>{currentCat=e.target.value;renderGrid()});
+    document.getElementById('brandFilter').addEventListener('change',e=>{currentBrand=e.target.value;renderGrid()});
+    document.getElementById('condFilter').addEventListener('change',e=>{currentCond=e.target.value;renderGrid()});
+    document.getElementById('searchInput').addEventListener('input',e=>{searchQuery=e.target.value.toLowerCase();renderGrid()});
+    document.getElementById('clearBtn').addEventListener('click',clearFilters);
+    document.getElementById('modalClose').addEventListener('click',closeModal);
+    document.getElementById('overlay').addEventListener('click',e=>{if(e.target===document.getElementById('overlay'))closeModal()});
+    document.getElementById('selShare').addEventListener('click',shareSelection);
+    document.getElementById('selClear').addEventListener('click',()=>{selected.clear();updateSelectionBar();renderGrid()});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();if(document.getElementById('overlay').classList.contains('open')){if(e.key==='ArrowRight')mNext();if(e.key==='ArrowLeft')mPrev()}});
+    renderGrid();
+}
+
+function getFiltered(){return PRODUCTS.filter(p=>{
+    if(currentGender!=='all'&&p.gender!==currentGender)return false;
+    if(currentCat&&p.category!==currentCat)return false;
+    if(currentBrand&&p.brand!==currentBrand)return false;
+    if(currentCond&&p.condition!==currentCond)return false;
+    if(searchQuery){const h=(p.name+' '+p.brand+' '+p.category+' '+p.color+' '+p.sku+' '+p.size).toLowerCase();if(!h.includes(searchQuery))return false}
+    return true;
+})}
+
+function renderGrid(){
+    const filtered=getFiltered(),grid=document.getElementById('grid');
+    document.getElementById('countLabel').textContent=filtered.length+(filtered.length===1?' piece':' pieces');
+    if(!filtered.length){grid.innerHTML='<div class="no-results"><div class="no-results-icon">&#8709;</div><div>No pieces match your filters</div></div>';return}
+    let h='';
+    filtered.forEach((p,idx)=>{
+        const isSel=selected.has(p.id),d=Math.min(idx*.03,.5);
+        h+=`<div class="card${!p.available?' unavailable':''}${isSel?' selected':''}" data-id="${p.id}" style="animation-delay:${d}s" onclick="openModal(${p.id})">`;
+        h+=`<div class="card-select${isSel?' checked':''}" onclick="event.stopPropagation();toggleSelect(${p.id})"></div>`;
+        if(!p.available)h+=`<div class="unavailable-overlay"><div class="unavailable-text">In Rental</div><div class="unavailable-date">${p.returnDate?'Available from '+p.returnDate:''}</div></div>`;
+        h+='<div class="card-images">';
+        h+=`<span class="condition-tag condition-${p.conditionClass}">${p.condition}</span>`;
+        if(p.images&&p.images.length){
+            p.images.forEach((src,i)=>{h+=`<img src="${src}" class="${i===0?'active':''}" alt="${p.name}" loading="lazy">`});
+            h+='<div class="swipe-zone left" onclick="event.stopPropagation();prevImg(this)"></div><div class="swipe-zone right" onclick="event.stopPropagation();nextImg(this)"></div><div class="carousel-dots">';
+            p.images.forEach((_,i)=>{h+=`<div class="carousel-dot${i===0?' active':''}" data-idx="${i}" onclick="event.stopPropagation();showImg(this)"></div>`});
+            h+='</div>';
+        }
+        h+='</div><div class="card-body">';
+        h+=`<div class="card-top"><div class="card-brand">${p.brand}</div><div class="card-cat">${p.gender} &middot; ${p.category}</div></div>`;
+        h+=`<div class="card-name">${p.name}</div><div class="card-meta">`;
+        if(p.year)h+=`<div class="meta-chip">Year <span>${p.year}</span></div>`;
+        if(p.size)h+=`<div class="meta-chip">Size <span>${p.size}</span></div>`;
+        if(p.color)h+=`<div class="meta-chip">Color <span>${p.color}</span></div>`;
+        h+='</div><div class="card-divider"></div><div class="pricing-row">';
+        h+=`<div><div class="price-label-small">Buy</div><div class="price-buy"><span class="cur">&euro;</span>${p.price||'&mdash;'}</div></div>`;
+        if(p.price>0)h+=`<div class="rental-mini"><div class="rental-mini-label">Rental</div><div class="rental-pills"><div class="rental-pill"><strong>&euro;${p.rental3}</strong> /3d</div><div class="rental-pill"><strong>&euro;${p.rental7}</strong> /7d</div><div class="rental-pill"><strong>&euro;${p.rental15}</strong> /15d</div></div></div>`;
+        h+='</div></div></div>';
+    });
+    grid.innerHTML=h;addTouch();
+}
+
+function showImg(dot){const c=dot.closest('.card-images'),i=parseInt(dot.dataset.idx);c.querySelectorAll(':scope>img').forEach((m,j)=>m.classList.toggle('active',j===i));c.querySelectorAll('.carousel-dot').forEach((d,j)=>d.classList.toggle('active',j===i))}
+function nextImg(el){const c=el.closest('.card-images'),imgs=c.querySelectorAll(':scope>img'),cur=[...imgs].findIndex(i=>i.classList.contains('active')),n=(cur+1)%imgs.length;imgs.forEach((m,j)=>m.classList.toggle('active',j===n));c.querySelectorAll('.carousel-dot').forEach((d,j)=>d.classList.toggle('active',j===n))}
+function prevImg(el){const c=el.closest('.card-images'),imgs=c.querySelectorAll(':scope>img'),cur=[...imgs].findIndex(i=>i.classList.contains('active')),n=(cur-1+imgs.length)%imgs.length;imgs.forEach((m,j)=>m.classList.toggle('active',j===n));c.querySelectorAll('.carousel-dot').forEach((d,j)=>d.classList.toggle('active',j===n))}
+function addTouch(){document.querySelectorAll('.card-images').forEach(c=>{let sx=0;c.addEventListener('touchstart',e=>{sx=e.touches[0].clientX},{passive:true});c.addEventListener('touchend',e=>{const d=sx-e.changedTouches[0].clientX;if(Math.abs(d)>35){const z=c.querySelector('.swipe-zone');if(z){d>0?nextImg(z):prevImg(z)}}},{passive:true})})}
+
+function toggleSelect(id){selected.has(id)?selected.delete(id):selected.add(id);updateSelectionBar();const card=document.querySelector(`.card[data-id="${id}"]`);if(card){card.classList.toggle('selected',selected.has(id));card.querySelector('.card-select').classList.toggle('checked',selected.has(id))}}
+function updateSelectionBar(){const bar=document.getElementById('selBar'),fab=document.getElementById('helpFab');if(selected.size>0){bar.classList.add('visible');document.getElementById('selCount').textContent=selected.size+' selected';fab.style.bottom='80px'}else{bar.classList.remove('visible');fab.style.bottom=''}}
+function shareSelection(){const items=PRODUCTS.filter(p=>selected.has(p.id));let msg="Hi, I'm interested in renting these pieces:\n\n";items.forEach(p=>{msg+=`\u2022 ${p.brand} \u2014 ${p.name}\n  Size: ${p.size} | SKU: ${p.sku}\n`});msg+="\nCould you check availability?";const url=WA_NUMBER?`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`:`https://wa.me/?text=${encodeURIComponent(msg)}`;window.open(url,'_blank')}
+
+let modalIdx=0;
+function openModal(id){
+    const p=PRODUCTS.find(x=>x.id===id);if(!p)return;
+    const gallery=document.getElementById('mGallery'),details=document.getElementById('mDetails');modalIdx=0;
+    let gH='';
+    if(p.images&&p.images.length){
+        p.images.forEach((s,i)=>{gH+=`<img src="${s}" class="${i===0?'active':''}" alt="${p.name}">`});
+        gH+='<div class="modal-thumbs">';p.images.forEach((s,i)=>{gH+=`<div class="modal-thumb ${i===0?'active':''}" onclick="mShowImg(${i})"><img src="${s}"></div>`});gH+='</div>';
+        gH+='<div class="swipe-zone left" onclick="mPrev()"></div><div class="swipe-zone right" onclick="mNext()"></div>';
+    }
+    gallery.innerHTML=gH;
+    let mH='';if(Object.keys(p.measurements).length){mH='<div class="meas-section"><div class="meas-title">Measurements</div>';for(const[k,v]of Object.entries(p.measurements)){mH+=`<div class="meas-row"><span class="meas-key">${k}</span><span class="meas-val">${v}</span></div>`}mH+='</div>'}
+    details.innerHTML=`<div class="modal-brand">${p.brand}</div><div class="modal-name">${p.name}</div><div class="modal-cat">${p.gender} &middot; ${p.category}${p.season?' &middot; '+p.season:''} ${p.year}</div><div class="detail-grid"><div class="detail-item"><div class="detail-label">Size</div><div class="detail-value">${p.size||'&mdash;'}</div></div><div class="detail-item"><div class="detail-label">Color</div><div class="detail-value">${p.color||'&mdash;'}</div></div><div class="detail-item"><div class="detail-label">Condition</div><div class="detail-value">${p.condition||'&mdash;'}</div></div><div class="detail-item"><div class="detail-label">Composition</div><div class="detail-value">${p.composition||'&mdash;'}</div></div></div>${mH}<div class="modal-pricing"><div class="modal-price-row"><div><div class="modal-buy-label">Buy price</div><div class="modal-buy-price"><span class="cur">&euro;</span>${p.price||'&mdash;'}</div></div></div><div style="font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Rental rates</div><div class="modal-rental-grid"><div class="modal-rental-item"><div class="modal-rental-days">3 days</div><div class="modal-rental-price">&euro;${p.rental3}</div></div><div class="modal-rental-item"><div class="modal-rental-days">7 days</div><div class="modal-rental-price">&euro;${p.rental7}</div></div><div class="modal-rental-item"><div class="modal-rental-days">15 days</div><div class="modal-rental-price">&euro;${p.rental15}</div></div></div><button class="inquiry-btn" onclick="inquireSingle(${p.id})">Inquire on WhatsApp</button></div>`;
+    document.getElementById('overlay').classList.add('open');document.body.style.overflow='hidden';
+}
+function mShowImg(i){modalIdx=i;const g=document.getElementById('mGallery');g.querySelectorAll(':scope>img').forEach((m,j)=>m.classList.toggle('active',j===i));g.querySelectorAll('.modal-thumb').forEach((t,j)=>t.classList.toggle('active',j===i))}
+function mNext(){const n=document.getElementById('mGallery').querySelectorAll(':scope>img').length;mShowImg((modalIdx+1)%n)}
+function mPrev(){const n=document.getElementById('mGallery').querySelectorAll(':scope>img').length;mShowImg((modalIdx-1+n)%n)}
+function closeModal(){document.getElementById('overlay').classList.remove('open');document.body.style.overflow=''}
+function inquireSingle(id){const p=PRODUCTS.find(x=>x.id===id);if(!p)return;const msg=`Hi, I'm interested in renting:\n\n${p.brand} \u2014 ${p.name}\nSize: ${p.size} | SKU: ${p.sku}\n\nIs it available?`;const url=WA_NUMBER?`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`:`https://wa.me/?text=${encodeURIComponent(msg)}`;window.open(url,'_blank')}
+function clearFilters(){currentGender='all';currentCat='';currentBrand='';currentCond='';searchQuery='';document.getElementById('searchInput').value='';document.getElementById('catFilter').value='';document.getElementById('brandFilter').value='';document.getElementById('condFilter').value='';document.querySelectorAll('.gender-btn').forEach(b=>b.classList.toggle('active',b.dataset.g==='all'));renderGrid()}
+
+init();checkTutorial();
+</script>
+</body>
+</html>
