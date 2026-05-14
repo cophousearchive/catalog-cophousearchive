@@ -117,8 +117,7 @@
         .meas-title{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px}
         .meas-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:.8rem}
         .meas-row:last-child{border:none}
-        .meas-key{color:var(--text-secondary)}
-        .meas-val{font-weight:600}
+        .meas-key{color:var(--text-secondary)}.meas-val{font-weight:600}
         .modal-pricing{margin-top:auto;padding-top:20px;border-top:1px solid var(--border)}
         .modal-price-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px}
         .modal-buy-price{font-size:2rem;font-weight:700}
@@ -160,6 +159,8 @@
         .help-fab:hover{background:var(--accent-dim);border-color:var(--accent);transform:scale(1.08)}
         .no-results{grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--text-muted)}
         .no-results-icon{font-size:2.5rem;margin-bottom:12px;opacity:.4}
+        /* Size filter dropdown with optgroups */
+        .filter-select optgroup{font-weight:600;color:var(--text-primary);font-style:normal}
         @media(max-width:768px){
             .brand-name{font-size:1.4rem}.grid{grid-template-columns:1fr 1fr;gap:10px;padding:16px 12px 120px}.card-body{padding:12px}.card-name{font-size:.82rem}.pricing-row{flex-direction:column;gap:8px;align-items:flex-start}.rental-pill{font-size:.58rem;padding:2px 6px}.filters-bar{padding:12px}.search-input{width:100%;order:-1}.filter-select,.gender-btn{font-size:.66rem;padding:6px 10px}.modal{grid-template-columns:1fr}.modal-gallery{aspect-ratio:1/1;border-radius:var(--radius) var(--radius) 0 0}.modal-details{padding:20px}.modal-name{font-size:1.2rem}.tutorial-card{padding:28px 20px 24px}.help-fab{width:40px;height:40px;bottom:20px;right:16px}
         }
@@ -194,9 +195,10 @@
 <div class="filters-bar"><div class="filters-inner">
     <input type="text" class="search-input" placeholder="Search brand, name, category..." id="searchInput">
     <div id="genderBtns" style="display:flex;gap:6px"><button class="gender-btn active" data-g="all">All</button><button class="gender-btn" data-g="Woman">Woman</button><button class="gender-btn" data-g="Man">Man</button><button class="gender-btn" data-g="Unisex">Unisex</button></div>
-    <select class="filter-select" id="catFilter"><option value="">All Categories</option></select>
-    <select class="filter-select" id="brandFilter"><option value="">All Brands</option></select>
-    <select class="filter-select" id="condFilter"><option value="">All Conditions</option></select>
+    <select class="filter-select" id="sizeFilter"><option value="">Filter by size</option></select>
+    <select class="filter-select" id="catFilter"><option value="">Filter by category</option></select>
+    <select class="filter-select" id="brandFilter"><option value="">Filter by brand</option></select>
+    <select class="filter-select" id="condFilter"><option value="">Filter by condition</option></select>
     <button class="clear-btn" id="clearBtn">Clear</button>
     <span class="filter-count" id="countLabel"></span>
 </div></div>
@@ -232,18 +234,76 @@
 
 <script src="data.js"></script>
 <script>
-const WA_NUMBER='';
-let selected=new Set(),currentGender='all',currentCat='',currentBrand='',currentCond='',searchQuery='';
+const WA_NUMBER='393516011596';
+const SHEET_ID='1lRuT-ugOlDCmxDcF86J0yiAhNqNB6SgFPoFySs3AEkM';
+let selected=new Set(),currentGender='all',currentCat='',currentBrand='',currentCond='',currentSize='',searchQuery='';
+
+// Google Sheet integration - fetch rental status
+async function fetchRentalStatus(){
+    try{
+        const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+        const res=await fetch(url);
+        const text=await res.text();
+        const json=JSON.parse(text.substring(47).slice(0,-2));
+        const rows=json.table.rows;
+        rows.forEach(row=>{
+            const id=row.c[0]?parseInt(row.c[0].v):0;
+            const status=row.c[6]?row.c[6].v:'Available';
+            const returnDate=row.c[7]?row.c[7].v:'';
+            if(status&&status!=='Available'){
+                const p=PRODUCTS.find(x=>x.id===id);
+                if(p){p.available=false;p.returnDate=returnDate||'';}
+            }
+        });
+        renderGrid();
+    }catch(e){console.log('Sheet fetch skipped:',e);}
+}
+
+function buildSizeFilter(){
+    const sel=document.getElementById('sizeFilter');
+    // Woman clothing sizes
+    const wGroup=document.createElement('optgroup');
+    wGroup.label='Woman';
+    FILTERS.clothingSizes.forEach(s=>{
+        const has=PRODUCTS.some(p=>p.sizeInt===s&&(p.gender==='Woman'||p.gender==='Unisex'));
+        if(has){const o=document.createElement('option');o.value='w-'+s;o.textContent=s;wGroup.appendChild(o);}
+    });
+    if(wGroup.children.length)sel.appendChild(wGroup);
+    // Woman shoes
+    if(FILTERS.shoeSizesWoman.length){
+        const wsGroup=document.createElement('optgroup');
+        wsGroup.label='Woman — Shoes';
+        FILTERS.shoeSizesWoman.forEach(s=>{const o=document.createElement('option');o.value='ws-'+s;o.textContent='EU '+s;wsGroup.appendChild(o);});
+        sel.appendChild(wsGroup);
+    }
+    // Man clothing sizes
+    const mGroup=document.createElement('optgroup');
+    mGroup.label='Man';
+    FILTERS.clothingSizes.forEach(s=>{
+        const has=PRODUCTS.some(p=>p.sizeInt===s&&(p.gender==='Man'||p.gender==='Unisex'));
+        if(has){const o=document.createElement('option');o.value='m-'+s;o.textContent=s;mGroup.appendChild(o);}
+    });
+    if(mGroup.children.length)sel.appendChild(mGroup);
+    // Man shoes
+    if(FILTERS.shoeSizesMan.length){
+        const msGroup=document.createElement('optgroup');
+        msGroup.label='Man — Shoes';
+        FILTERS.shoeSizesMan.forEach(s=>{const o=document.createElement('option');o.value='ms-'+s;o.textContent='EU '+s;msGroup.appendChild(o);});
+        sel.appendChild(msGroup);
+    }
+}
 
 function showTutorial(){const o=document.getElementById('tutOverlay');o.classList.remove('hiding');o.style.display='flex';}
 function closeTutorial(no){const o=document.getElementById('tutOverlay');o.classList.add('hiding');setTimeout(()=>{o.style.display='none'},300);if(no)try{localStorage.setItem('cophouse_tut_dismissed','1')}catch(e){}}
 function checkTutorial(){try{if(localStorage.getItem('cophouse_tut_dismissed')){document.getElementById('tutOverlay').style.display='none';return}}catch(e){}showTutorial();}
 
 function init(){
+    buildSizeFilter();
     FILTERS.categories.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;document.getElementById('catFilter').appendChild(o)});
     FILTERS.brands.forEach(b=>{const o=document.createElement('option');o.value=b;o.textContent=b;document.getElementById('brandFilter').appendChild(o)});
     FILTERS.conditions.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;document.getElementById('condFilter').appendChild(o)});
     document.querySelectorAll('.gender-btn').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.gender-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');currentGender=btn.dataset.g;renderGrid()}));
+    document.getElementById('sizeFilter').addEventListener('change',e=>{currentSize=e.target.value;renderGrid()});
     document.getElementById('catFilter').addEventListener('change',e=>{currentCat=e.target.value;renderGrid()});
     document.getElementById('brandFilter').addEventListener('change',e=>{currentBrand=e.target.value;renderGrid()});
     document.getElementById('condFilter').addEventListener('change',e=>{currentCond=e.target.value;renderGrid()});
@@ -255,10 +315,33 @@ function init(){
     document.getElementById('selClear').addEventListener('click',()=>{selected.clear();updateSelectionBar();renderGrid()});
     document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();if(document.getElementById('overlay').classList.contains('open')){if(e.key==='ArrowRight')mNext();if(e.key==='ArrowLeft')mPrev()}});
     renderGrid();
+    fetchRentalStatus();
+}
+
+function matchSize(p){
+    if(!currentSize)return true;
+    const parts=currentSize.split('-');
+    const type=parts[0]; // w, m, ws, ms
+    const val=parts[1];
+    if(type==='w'){
+        // Woman clothing size
+        return p.sizeInt===val&&(p.gender==='Woman'||p.gender==='Unisex');
+    }else if(type==='m'){
+        // Man clothing size
+        return p.sizeInt===val&&(p.gender==='Man'||p.gender==='Unisex');
+    }else if(type==='ws'){
+        // Woman shoe size
+        return p.shoeSize===val&&(p.gender==='Woman'||p.gender==='Unisex');
+    }else if(type==='ms'){
+        // Man shoe size
+        return p.shoeSize===val&&(p.gender==='Man'||p.gender==='Unisex');
+    }
+    return true;
 }
 
 function getFiltered(){return PRODUCTS.filter(p=>{
     if(currentGender!=='all'&&p.gender!==currentGender)return false;
+    if(!matchSize(p))return false;
     if(currentCat&&p.category!==currentCat)return false;
     if(currentBrand&&p.brand!==currentBrand)return false;
     if(currentCond&&p.condition!==currentCond)return false;
@@ -305,7 +388,7 @@ function addTouch(){document.querySelectorAll('.card-images').forEach(c=>{let sx
 
 function toggleSelect(id){selected.has(id)?selected.delete(id):selected.add(id);updateSelectionBar();const card=document.querySelector(`.card[data-id="${id}"]`);if(card){card.classList.toggle('selected',selected.has(id));card.querySelector('.card-select').classList.toggle('checked',selected.has(id))}}
 function updateSelectionBar(){const bar=document.getElementById('selBar'),fab=document.getElementById('helpFab');if(selected.size>0){bar.classList.add('visible');document.getElementById('selCount').textContent=selected.size+' selected';fab.style.bottom='80px'}else{bar.classList.remove('visible');fab.style.bottom=''}}
-function shareSelection(){const items=PRODUCTS.filter(p=>selected.has(p.id));let msg="Hi, I'm interested in renting these pieces:\n\n";items.forEach(p=>{msg+=`\u2022 ${p.brand} \u2014 ${p.name}\n  Size: ${p.size} | SKU: ${p.sku}\n`});msg+="\nCould you check availability?";const url=WA_NUMBER?`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`:`https://wa.me/?text=${encodeURIComponent(msg)}`;window.open(url,'_blank')}
+function shareSelection(){const items=PRODUCTS.filter(p=>selected.has(p.id));let msg="Hi, I'm interested in renting these pieces:\n\n";items.forEach(p=>{msg+=`\u2022 ${p.brand} \u2014 ${p.name}\n  Size: ${p.size} | SKU: ${p.sku}\n`});msg+="\nCould you check availability?";const url=`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;window.open(url,'_blank')}
 
 let modalIdx=0;
 function openModal(id){
@@ -326,8 +409,8 @@ function mShowImg(i){modalIdx=i;const g=document.getElementById('mGallery');g.qu
 function mNext(){const n=document.getElementById('mGallery').querySelectorAll(':scope>img').length;mShowImg((modalIdx+1)%n)}
 function mPrev(){const n=document.getElementById('mGallery').querySelectorAll(':scope>img').length;mShowImg((modalIdx-1+n)%n)}
 function closeModal(){document.getElementById('overlay').classList.remove('open');document.body.style.overflow=''}
-function inquireSingle(id){const p=PRODUCTS.find(x=>x.id===id);if(!p)return;const msg=`Hi, I'm interested in renting:\n\n${p.brand} \u2014 ${p.name}\nSize: ${p.size} | SKU: ${p.sku}\n\nIs it available?`;const url=WA_NUMBER?`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`:`https://wa.me/?text=${encodeURIComponent(msg)}`;window.open(url,'_blank')}
-function clearFilters(){currentGender='all';currentCat='';currentBrand='';currentCond='';searchQuery='';document.getElementById('searchInput').value='';document.getElementById('catFilter').value='';document.getElementById('brandFilter').value='';document.getElementById('condFilter').value='';document.querySelectorAll('.gender-btn').forEach(b=>b.classList.toggle('active',b.dataset.g==='all'));renderGrid()}
+function inquireSingle(id){const p=PRODUCTS.find(x=>x.id===id);if(!p)return;const msg=`Hi, I'm interested in renting:\n\n${p.brand} \u2014 ${p.name}\nSize: ${p.size} | SKU: ${p.sku}\n\nIs it available?`;const url=`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;window.open(url,'_blank')}
+function clearFilters(){currentGender='all';currentCat='';currentBrand='';currentCond='';currentSize='';searchQuery='';document.getElementById('searchInput').value='';document.getElementById('sizeFilter').value='';document.getElementById('catFilter').value='';document.getElementById('brandFilter').value='';document.getElementById('condFilter').value='';document.querySelectorAll('.gender-btn').forEach(b=>b.classList.toggle('active',b.dataset.g==='all'));renderGrid()}
 
 init();checkTutorial();
 </script>
