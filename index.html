@@ -250,10 +250,10 @@ async function fetchRentalStatus(){
             const id=row.c[0]?parseInt(row.c[0].v):0;
             const status=row.c[6]?row.c[6].v:'Available';
             const returnDate=row.c[7]?row.c[7].v:'';
-            if(status&&status!=='Available'){
-                const p=PRODUCTS.find(x=>x.id===id);
-                if(p){p.available=false;p.returnDate=returnDate||'';}
-            }
+            const p=PRODUCTS.find(x=>x.id===id);
+            if(!p)return;
+            if(status==='Hidden'){p.hidden=true;}
+            else if(status&&status!=='Available'){p.available=false;p.returnDate=returnDate||'';}
         });
         renderGrid();
     }catch(e){console.log('Sheet fetch skipped:',e);}
@@ -340,6 +340,7 @@ function matchSize(p){
 }
 
 function getFiltered(){return PRODUCTS.filter(p=>{
+    if(p.hidden)return false;
     if(currentGender!=='all'&&p.gender!==currentGender)return false;
     if(!matchSize(p))return false;
     if(currentCat&&p.category!==currentCat)return false;
